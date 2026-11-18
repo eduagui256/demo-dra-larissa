@@ -541,7 +541,8 @@ button.mtr:hover{background:#FAFBFE}
 /* Login */
 .login{min-height:calc(100vh - var(--demobar));display:grid;grid-template-columns:1fr 1fr;background:#fff}
 .login .art{background:var(--t-lilac);position:relative;overflow:hidden;display:flex;align-items:flex-end;justify-content:center}
-.login .art img.dra{height:88%;position:relative;z-index:1;animation:fadeUp .7s var(--ease) both}
+/* a foto não define a altura da tela: fica presa ao rodapé da coluna e é cortada no busto */
+.login .art img.dra{position:absolute;bottom:0;left:0;right:0;margin-inline:auto;width:min(80%,480px);height:calc(100% - 210px);min-height:240px;object-fit:cover;object-position:50% 0;z-index:1;animation:fadeUp .7s var(--ease) both}
 .login .art .q{position:absolute;left:40px;top:44px;max-width:300px;z-index:2}
 .login .art .q b{font-size:28px;font-weight:800;line-height:1.2;display:block}
 .login .art .q span{display:block;margin-top:8px;color:var(--text-2)}
@@ -769,7 +770,7 @@ button.prow[aria-expanded="true"]{background:var(--t-lilac)}
 .faq-i.open .faq-q svg{transform:rotate(90deg)}
 .faq-a{padding:0 14px 10px;font-size:14px;line-height:1.6;color:var(--text);animation:fadeUp .3s var(--ease) both}
 .faq-more{display:block;margin-top:4px;border:0;background:none;padding:6px 0;min-height:44px;color:var(--c-deep);font-weight:700;font-size:13.5px;text-decoration:underline;text-underline-offset:3px;text-align:left}
-.urg{position:sticky;bottom:80px;z-index:3;display:flex;gap:10px;align-items:flex-start;background:var(--text);color:#fff;border-radius:16px;padding:12px 14px;font-size:13.5px;box-shadow:var(--sh-2)}
+.urg{display:flex;gap:10px;align-items:flex-start;background:var(--text);color:#fff;border-radius:16px;padding:12px 14px;font-size:13.5px;box-shadow:var(--sh-2)}
 .urg svg{color:var(--c-yellow);margin-top:1px}
 /* Consultas */
 .ag-conf{background:#fff;border-radius:var(--r-lg);box-shadow:var(--sh-1);padding:16px;border-left:5px solid var(--c-green);display:flex;flex-direction:column;gap:6px;animation:fadeUp .45s var(--ease) both}
@@ -1399,6 +1400,8 @@ function renderFamily(seg){
   $('#tabInd').style.transform = `translateX(${ti * 100}%)`;
   $$('.tab', tabbar).forEach((b, i) => i === ti ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current'));
   scroll.innerHTML = `<div class="view-enter">${view(p, sub, sub2)}</div>`;
+  // aviso de urgência: aparece como pop-up na primeira entrada no Chat de cada visita
+  if (page === 'chat' && !famState.urgSeen){ famState.urgSeen = true; setTimeout(openUrgSheet, 260); }
   scroll.scrollTop = 0;
   document.title = 'App da família · ' + p.curto;
   if (page === 'pin') setupPin(p);
@@ -1766,6 +1769,16 @@ function openSheet(html){
   bg.close = () => { bg.style.animation = 'fadeIn .2s reverse both'; setTimeout(() => bg.remove(), 180); };
   host.appendChild(bg);
   return bg;
+}
+function openUrgSheet(){
+  if (!$('#phoneScreen')) return;
+  const bg = openSheet(`<span class="card-t">Antes de usar o Chat</span>
+    <h2 id="shT">Não use este canal para urgências</h2>
+    <p style="color:var(--text-2)">Atendimento pelo WhatsApp de segunda a sexta, das 8h às 18h. <span class="exemplo">Exemplo</span></p>
+    <p style="color:var(--text-2)">Em caso de urgência, procurem um pronto-atendimento ou liguem para o SAMU (192).</p>
+    <button class="btn btn-1 btn-block" data-sh="ok">Entendi</button>`);
+  bg.addEventListener('click', e => { if (e.target === bg || e.target.closest('[data-sh="ok"]')) bg.close(); });
+  setTimeout(() => $('[data-sh="ok"]', bg)?.focus(), 220);
 }
 function openWaSheet(p, kind){
   const bg = openSheet(`<span class="card-t">WhatsApp do consultório</span>

@@ -99,7 +99,15 @@ svg.i.l{width:26px;height:26px}
 .fb-item button{border:0;background:none;min-width:44px;min-height:44px;margin:-8px -8px -8px 0;border-radius:12px;color:var(--muted);display:flex;align-items:center;justify-content:center}
 .fb-item button:hover{background:var(--err-b);color:var(--err-t)}
 .fb-empty{font-size:14px;color:var(--muted);text-align:center;padding:8px 0}
-.fb-send{display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--border);padding-top:16px}
+.fb-steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--text-2)}
+.fb-steps b{color:var(--text)}
+.fb-h{font-size:13px;font-weight:700;color:var(--text-2)}
+.fb-send{display:flex;flex-direction:column;gap:10px;background:var(--t-green);border:1.5px solid var(--c-green-p);border-radius:var(--r-md);padding:16px}
+.fb-send .st{font-size:14px;font-weight:600;color:var(--c-green-d)}
+.fb-send .st.off{font-weight:500;color:var(--text-2)}
+.btn-send{background:var(--c-green-d);color:#fff;box-shadow:0 6px 16px rgba(47,107,79,.25)}
+.btn-send:hover{background:#265a43}
+.btn-send[disabled]{opacity:.45;box-shadow:none}
 .fb-err{font-size:13px;color:var(--err-t);background:var(--err-b);border-radius:var(--r-sm);padding:10px 12px}
 
 /* ---------- Botões ---------- */
@@ -2584,14 +2592,15 @@ function fbText(){
   return L.join('\n');
 }
 function fbListHtml(){
-  if (!FB.items.length) return '<p class="fb-empty">Nenhum comentário ainda.</p>';
-  return FB.items.map(c => `<div class="fb-item"><div class="tx"><span class="tg">${esc(c.tipo)} · ${esc(c.label)}</span><p>${esc(c.txt)}</p></div><button type="button" data-fb-del="${c.id}" aria-label="Apagar comentário">${ic('trash')}</button></div>`).join('');
+  if (!FB.items.length) return '<p class="fb-empty">Nenhum comentário guardado ainda.</p>';
+  return '<div class="fb-h">Guardados neste aparelho (ainda não enviados)</div>' + FB.items.map(c => `<div class="fb-item"><div class="tx"><span class="tg">${esc(c.tipo)} · ${esc(c.label)}</span><p>${esc(c.txt)}</p></div><button type="button" data-fb-del="${c.id}" aria-label="Apagar comentário">${ic('trash')}</button></div>`).join('');
 }
 function fbSendHtml(err){
   const n = FB.items.length;
   return (err ? `<div class="fb-err" role="alert">${esc(err)}</div>` : '') +
+    `<div class="st ${n ? '' : 'off'}">${n ? `${n} ${n === 1 ? 'comentário guardado, ainda não enviado' : 'comentários guardados, ainda não enviados'}` : 'Guarde ao menos um comentário para poder enviar.'}</div>` +
     `<div class="field"><label for="fbNome">Seu nome (opcional)</label><input class="input" id="fbNome" value="${esc(FB.nome)}" autocomplete="name"></div>` +
-    `<button type="button" class="btn btn-1" id="fbEnviar" ${n ? '' : 'disabled'}>${ic('send')}Enviar ${n ? n + (n === 1 ? ' comentário' : ' comentários') : 'comentários'}</button>` +
+    `<button type="button" class="btn btn-send" id="fbEnviar" ${n ? '' : 'disabled'}>${ic('send')}Enviar para o Edu${n ? ' (' + n + ')' : ''}</button>` +
     (n ? `<button type="button" class="btn btn-ghost" id="fbCopiar">Copiar comentários</button>` : '');
 }
 function fbClose(){ const d = $('#fbDrawer'); if (d) d.remove(); }
@@ -2603,12 +2612,12 @@ function fbOpen(){
   bg.innerHTML = `<aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="fbT">
     <div class="drawer-h"><h2 id="fbT" style="font-size:18px">Comentários</h2><button type="button" class="btn btn-ghost" data-fb-x aria-label="Fechar">${ic('x')}</button></div>
     <div class="fb-body">
-      <p class="fb-note">Conforme for usando, anote o que gostou, o que não gostou ou o que quer diferente. Nada é enviado até você tocar em <b>Enviar</b>.</p>
+      <ol class="fb-steps"><li><b>Anote</b> quantos comentários quiser, conforme for usando. Eles ficam só guardados aqui, <b>não são enviados</b>.</li><li>Quando terminar, toque no botão verde <b>Enviar para o Edu</b>, lá embaixo.</li></ol>
       <p class="fb-warn">Não escreva nomes nem dados de pacientes reais.</p>
       <div class="fb-where">Comentando sobre: <b>${esc(w.label)}</b></div>
       <div class="chips" role="group" aria-label="Tipo de comentário" id="fbTipos">${FB_TIPOS.map(t => `<button type="button" class="chip" data-fb-tipo="${t}" aria-pressed="${t === FB.tipo}">${t}</button>`).join('')}</div>
       <div class="field"><label for="fbTxt">O que você achou?</label><textarea class="input" id="fbTxt" rows="4" placeholder="Ex.: o gráfico de peso podia ter a linha da média mais clara">${esc(FB.draft)}</textarea></div>
-      <button type="button" class="btn btn-2" id="fbAdd">${ic('plus')}Adicionar comentário</button>
+      <button type="button" class="btn btn-3" id="fbAdd">${ic('plus')}Guardar comentário</button>
       <div class="fb-list" id="fbList" aria-live="polite">${fbListHtml()}</div>
       <div class="fb-send" id="fbSend">${fbSendHtml()}</div>
     </div></aside>`;
@@ -2625,7 +2634,7 @@ function fbOpen(){
       FB.items.push({id: Date.now(), tipo: FB.tipo, txt, at: new Date().toISOString(), label: w2.label, rota: w2.rota});
       FB.draft = ''; $('#fbTxt').value = ''; fbSave(); fbCount();
       $('#fbList').innerHTML = fbListHtml(); $('#fbSend').innerHTML = fbSendHtml();
-      return toast('Comentário anotado.', {icon:'check'});
+      return toast('Guardado. Ainda não foi enviado: toque em Enviar quando terminar.', {icon:'check', ms:4500});
     }
     if (e.target.closest('#fbCopiar')) return copy(fbText(), 'Comentários copiados.');
     if (e.target.closest('#fbEnviar')) {

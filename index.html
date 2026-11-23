@@ -110,6 +110,15 @@ svg.i.l{width:26px;height:26px}
 .btn-send[disabled]{opacity:.45;box-shadow:none}
 .fb-err{font-size:13px;color:var(--err-t);background:var(--err-b);border-radius:var(--r-sm);padding:10px 12px}
 
+/* ---------- Tutorial em vídeo ---------- */
+.tut-bg{z-index:112;background:rgba(36,48,71,.6)}
+.tut{background:#fff;border-radius:var(--r-xl);box-shadow:var(--sh-2);width:min(100%,980px);max-height:100%;overflow:auto;padding:16px 16px 18px;display:flex;flex-direction:column;gap:12px;animation:pop .35s var(--spring) both}
+.tut-h{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.tut-h h2{font-size:18px}
+.tut video{width:100%;aspect-ratio:16/9;border-radius:var(--r-md);background:#0f1522;display:block}
+.tut p{font-size:13px;color:var(--text-2);margin:0}
+.fb-tut{align-self:flex-start;padding:0 12px 0 8px}
+
 /* ---------- Botões ---------- */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 20px;border-radius:16px;border:1px solid transparent;font-weight:700;font-size:15px;text-decoration:none;transition:transform .15s var(--ease),background .2s,box-shadow .2s,opacity .2s;-webkit-tap-highlight-color:transparent;white-space:nowrap}
 .btn:active{transform:scale(.97)}
@@ -922,6 +931,7 @@ button.prow[aria-expanded="true"]{background:var(--t-lilac)}
     <button type="button" data-act="toFamily" aria-pressed="false"><span>Família</span></button>
     <button type="button" data-act="toPanel" aria-pressed="false"><span>Médica</span></button>
   </div>
+  <button type="button" class="fb-btn" id="tutBtn" data-act="tut" aria-label="Assistir ao tutorial em vídeo"><svg class="i s" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.9l10.4-6.5a1 1 0 0 0 0-1.8L9.5 4.6A1 1 0 0 0 8 5.5z"/></svg><span class="l">Tutorial</span></button>
   <button type="button" class="fb-btn" id="fbBtn" data-act="fb" data-n="0" aria-label="Comentários sobre a demonstração"><svg class="i s" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-12.6 7.4L3 20.5l1.6-5.1A8.5 8.5 0 1 1 21 11.5z"/></svg><span class="l">Comentar</span><span class="n" id="fbN">0</span></button>
   <button type="button" class="reset" data-act="reset" aria-label="Reiniciar demonstração"><svg class="i s" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.5-6.3L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.3L3 16"/><path d="M3 21v-5h5"/></svg><span>Reiniciar demonstração</span></button>
 </header>
@@ -2613,6 +2623,7 @@ function fbOpen(){
     <div class="drawer-h"><h2 id="fbT" style="font-size:18px">Comentários</h2><button type="button" class="btn btn-ghost" data-fb-x aria-label="Fechar">${ic('x')}</button></div>
     <div class="fb-body">
       <ol class="fb-steps"><li><b>Anote</b> quantos comentários quiser, conforme for usando. Eles ficam só guardados aqui, <b>não são enviados</b>.</li><li>Quando terminar, toque no botão verde <b>Enviar para o Edu</b>, lá embaixo.</li></ol>
+      <button type="button" class="btn btn-ghost fb-tut" data-fb-tut>${ic('play')}Primeira vez? Assista ao tutorial (14 min)</button>
       <p class="fb-warn">Não escreva nomes nem dados de pacientes reais.</p>
       <div class="fb-where">Comentando sobre: <b>${esc(w.label)}</b></div>
       <div class="chips" role="group" aria-label="Tipo de comentário" id="fbTipos">${FB_TIPOS.map(t => `<button type="button" class="chip" data-fb-tipo="${t}" aria-pressed="${t === FB.tipo}">${t}</button>`).join('')}</div>
@@ -2623,6 +2634,7 @@ function fbOpen(){
     </div></aside>`;
   bg.addEventListener('click', async e => {
     if (e.target === bg || e.target.closest('[data-fb-x]')) return fbClose();
+    if (e.target.closest('[data-fb-tut]')) return tutOpen();
     const t = e.target.closest('[data-fb-tipo]');
     if (t) { FB.tipo = t.dataset.fbTipo; fbSave(); $$('#fbTipos .chip').forEach(c => c.setAttribute('aria-pressed', String(c === t))); return; }
     const d = e.target.closest('[data-fb-del]');
@@ -2660,6 +2672,19 @@ function fbOpen(){
   document.body.appendChild(bg);
   $('#fbTxt').focus();
 }
+function tutOpen(){
+  if ($('#tutModal')) return;
+  const bg = document.createElement('div');
+  bg.className = 'modal-bg tut-bg'; bg.id = 'tutModal';
+  bg.innerHTML = `<div class="tut" role="dialog" aria-modal="true" aria-labelledby="tutT">
+    <div class="tut-h"><h2 id="tutT">Tutorial da demonstração</h2><button type="button" class="btn btn-ghost" data-tut-x aria-label="Fechar tutorial">${ic('x')}</button></div>
+    <video controls playsinline preload="none" poster="${A('tutorial-poster.jpg')}" src="${A('tutorial.mp4')}"></video>
+    <p>Dura cerca de 14 minutos. Você pode pausar, voltar e abrir em tela cheia. O vídeo só carrega quando você toca em reproduzir.</p>
+  </div>`;
+  bg.addEventListener('click', e => { if (e.target === bg || e.target.closest('[data-tut-x]')) { const v = $('video', bg); v && v.pause(); bg.remove(); } });
+  document.body.appendChild(bg);
+}
+act.tut = tutOpen;
 act.fb = fbOpen;
 fbCount();
 

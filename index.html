@@ -79,6 +79,29 @@ svg.i.l{width:26px;height:26px}
 .reset:hover{background:var(--t-lilac);color:var(--c-deep)}
 .reset:hover svg{animation:spin .6s var(--ease)}
 
+/* ---------- Comentários da cliente (feedback da demo) ---------- */
+.fb-btn{border:1px solid var(--border);background:#fff;border-radius:var(--r-pill);min-height:40px;padding:0 14px;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--c-deep);transition:background .2s}
+.fb-btn:hover{background:var(--t-lilac)}
+.fb-btn .n{display:none;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--c-deep);color:#fff;font-size:11px;font-weight:700;align-items:center;justify-content:center}
+.fb-btn[data-n]:not([data-n="0"]) .n{display:inline-flex}
+.fb-body{padding:0 20px;display:flex;flex-direction:column;gap:16px}
+.fb-body h2{font-size:20px}
+.fb-note{font-size:14px;color:var(--text-2)}
+.fb-warn{font-size:13px;background:var(--warn-b);color:var(--warn-t);border-radius:var(--r-sm);padding:10px 12px}
+.fb-where{font-size:13px;color:var(--text-2);background:var(--t-lilac);border-radius:var(--r-sm);padding:8px 12px}
+.fb-where b{color:var(--c-deep)}
+.fb-body .chips{flex-wrap:wrap;overflow:visible}
+.fb-list{display:flex;flex-direction:column;gap:10px}
+.fb-item{background:#fff;border-radius:var(--r-md);box-shadow:var(--sh-1);padding:12px 14px;display:flex;gap:10px;align-items:flex-start}
+.fb-item .tx{flex:1;min-width:0;font-size:14px}
+.fb-item .tg{font-size:12px;font-weight:700;color:var(--c-deep);display:block;margin-bottom:2px}
+.fb-item .tx p{margin:4px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.fb-item button{border:0;background:none;min-width:44px;min-height:44px;margin:-8px -8px -8px 0;border-radius:12px;color:var(--muted);display:flex;align-items:center;justify-content:center}
+.fb-item button:hover{background:var(--err-b);color:var(--err-t)}
+.fb-empty{font-size:14px;color:var(--muted);text-align:center;padding:8px 0}
+.fb-send{display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--border);padding-top:16px}
+.fb-err{font-size:13px;color:var(--err-t);background:var(--err-b);border-radius:var(--r-sm);padding:10px 12px}
+
 /* ---------- Botões ---------- */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 20px;border-radius:16px;border:1px solid transparent;font-weight:700;font-size:15px;text-decoration:none;transition:transform .15s var(--ease),background .2s,box-shadow .2s,opacity .2s;-webkit-tap-highlight-color:transparent;white-space:nowrap}
 .btn:active{transform:scale(.97)}
@@ -818,7 +841,7 @@ button.prow[aria-expanded="true"]{background:var(--t-lilac)}
   .mtr .c-type,.mtr .c-pk{display:none}
   .choices,.roteiro{grid-template-columns:1fr}
   .choice{min-height:240px}
-  .demobar .home span,.reset span{display:none}
+  .demobar .home span,.reset span,.fb-btn .l{display:none}
   .seg button{min-width:0;padding:0 12px}
 }
 @media (max-width:560px){
@@ -891,6 +914,7 @@ button.prow[aria-expanded="true"]{background:var(--t-lilac)}
     <button type="button" data-act="toFamily" aria-pressed="false"><span>Família</span></button>
     <button type="button" data-act="toPanel" aria-pressed="false"><span>Médica</span></button>
   </div>
+  <button type="button" class="fb-btn" id="fbBtn" data-act="fb" data-n="0" aria-label="Comentários sobre a demonstração"><svg class="i s" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-12.6 7.4L3 20.5l1.6-5.1A8.5 8.5 0 1 1 21 11.5z"/></svg><span class="l">Comentar</span><span class="n" id="fbN">0</span></button>
   <button type="button" class="reset" data-act="reset" aria-label="Reiniciar demonstração"><svg class="i s" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.5-6.3L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.3L3 16"/><path d="M3 21v-5h5"/></svg><span>Reiniciar demonstração</span></button>
 </header>
 <div id="app"></div>
@@ -2534,6 +2558,101 @@ document.addEventListener('input', e => { const t = e.target.closest('[data-in]'
 document.addEventListener('change', e => { const t = e.target.closest('[data-in]'); if (t && inp[t.dataset.in] && (t.tagName === 'SELECT' || t.type === 'checkbox' || t.type === 'file')) inp[t.dataset.in](t); });
 document.addEventListener('focusout', e => { const t = e.target.closest('[data-in="meas"]'); if (t) validateMeas(t.dataset.k); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { const m = $('.modal-bg') || $('.sheet-bg') || $('.drawer-bg') || $('.pmodal-bg'); if (m) m.remove(); } });
+
+/* =========================================================
+   COMENTÁRIOS DA CLIENTE — acumula no aparelho e envia 1 e-mail
+   (Web3Forms). Cole a chave pública em FB_ACCESS_KEY.
+   ========================================================= */
+const FB_ACCESS_KEY = 'COLE_AQUI_A_CHAVE_DO_WEB3FORMS';
+const FB_STORE = 'larissa-demo-feedback-v1';   // separado do KEY: "Reiniciar demonstração" não apaga comentários
+const FB_TIPOS = ['Quero diferente','Não gostei','Ideia','Gostei'];
+let FB = (() => { try { const v = JSON.parse(localStorage.getItem(FB_STORE)); if (v && Array.isArray(v.items)) return v; } catch(e){} return {items:[], draft:'', tipo:'Quero diferente', nome:''}; })();
+const fbSave = () => { try { localStorage.setItem(FB_STORE, JSON.stringify(FB)); } catch(e){} };
+function fbWhere(){
+  const s = parse();
+  const modo = s[0] === 'painel' ? 'Médica' : s[0] === 'familia' ? 'Família' : 'Início';
+  const h = $('#app h1') || $('#app h2');
+  const titulo = h ? h.textContent.replace(/\s+/g, ' ').trim().slice(0, 60) : '';
+  return {modo, titulo, rota: '#/' + s.join('/'), label: modo + (titulo ? ' › ' + titulo : '')};
+}
+function fbCount(){ const b = $('#fbBtn'); if (b) { b.dataset.n = String(FB.items.length); $('#fbN').textContent = FB.items.length; } }
+function fbText(){
+  const L = [`Feedback da demo — ${FB.items.length} comentário(s)`,
+    `De: ${FB.nome || 'Dra. Larissa'}`,
+    `Aparelho: ${innerWidth}x${innerHeight} · ${navigator.userAgent.slice(0, 90)}`, ''];
+  FB.items.forEach((c, i) => L.push(`${i + 1}) [${c.tipo}] ${c.label}`, `   Rota: ${c.rota} · ${new Date(c.at).toLocaleString('pt-BR')}`, `   ${c.txt.replace(/\n/g, '\n   ')}`, ''));
+  return L.join('\n');
+}
+function fbListHtml(){
+  if (!FB.items.length) return '<p class="fb-empty">Nenhum comentário ainda.</p>';
+  return FB.items.map(c => `<div class="fb-item"><div class="tx"><span class="tg">${esc(c.tipo)} · ${esc(c.label)}</span><p>${esc(c.txt)}</p></div><button type="button" data-fb-del="${c.id}" aria-label="Apagar comentário">${ic('trash')}</button></div>`).join('');
+}
+function fbSendHtml(err){
+  const n = FB.items.length;
+  return (err ? `<div class="fb-err" role="alert">${esc(err)}</div>` : '') +
+    `<div class="field"><label for="fbNome">Seu nome (opcional)</label><input class="input" id="fbNome" value="${esc(FB.nome)}" autocomplete="name"></div>` +
+    `<button type="button" class="btn btn-1" id="fbEnviar" ${n ? '' : 'disabled'}>${ic('send')}Enviar ${n ? n + (n === 1 ? ' comentário' : ' comentários') : 'comentários'}</button>` +
+    (n ? `<button type="button" class="btn btn-ghost" id="fbCopiar">Copiar comentários</button>` : '');
+}
+function fbClose(){ const d = $('#fbDrawer'); if (d) d.remove(); }
+function fbOpen(){
+  if ($('#fbDrawer')) return fbClose();
+  const bg = document.createElement('div');
+  bg.className = 'drawer-bg'; bg.id = 'fbDrawer';
+  const w = fbWhere();
+  bg.innerHTML = `<aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="fbT">
+    <div class="drawer-h"><h2 id="fbT" style="font-size:18px">Comentários</h2><button type="button" class="btn btn-ghost" data-fb-x aria-label="Fechar">${ic('x')}</button></div>
+    <div class="fb-body">
+      <p class="fb-note">Conforme for usando, anote o que gostou, o que não gostou ou o que quer diferente. Nada é enviado até você tocar em <b>Enviar</b>.</p>
+      <p class="fb-warn">Não escreva nomes nem dados de pacientes reais.</p>
+      <div class="fb-where">Comentando sobre: <b>${esc(w.label)}</b></div>
+      <div class="chips" role="group" aria-label="Tipo de comentário" id="fbTipos">${FB_TIPOS.map(t => `<button type="button" class="chip" data-fb-tipo="${t}" aria-pressed="${t === FB.tipo}">${t}</button>`).join('')}</div>
+      <div class="field"><label for="fbTxt">O que você achou?</label><textarea class="input" id="fbTxt" rows="4" placeholder="Ex.: o gráfico de peso podia ter a linha da média mais clara">${esc(FB.draft)}</textarea></div>
+      <button type="button" class="btn btn-2" id="fbAdd">${ic('plus')}Adicionar comentário</button>
+      <div class="fb-list" id="fbList" aria-live="polite">${fbListHtml()}</div>
+      <div class="fb-send" id="fbSend">${fbSendHtml()}</div>
+    </div></aside>`;
+  bg.addEventListener('click', async e => {
+    if (e.target === bg || e.target.closest('[data-fb-x]')) return fbClose();
+    const t = e.target.closest('[data-fb-tipo]');
+    if (t) { FB.tipo = t.dataset.fbTipo; fbSave(); $$('#fbTipos .chip').forEach(c => c.setAttribute('aria-pressed', String(c === t))); return; }
+    const d = e.target.closest('[data-fb-del]');
+    if (d) { FB.items = FB.items.filter(c => String(c.id) !== d.dataset.fbDel); fbSave(); fbCount(); $('#fbList').innerHTML = fbListHtml(); $('#fbSend').innerHTML = fbSendHtml(); return; }
+    if (e.target.closest('#fbAdd')) {
+      const txt = $('#fbTxt').value.trim();
+      if (!txt) { $('#fbTxt').focus(); return toast('Escreva o comentário antes de adicionar.', {icon:'info'}); }
+      const w2 = fbWhere();
+      FB.items.push({id: Date.now(), tipo: FB.tipo, txt, at: new Date().toISOString(), label: w2.label, rota: w2.rota});
+      FB.draft = ''; $('#fbTxt').value = ''; fbSave(); fbCount();
+      $('#fbList').innerHTML = fbListHtml(); $('#fbSend').innerHTML = fbSendHtml();
+      return toast('Comentário anotado.', {icon:'check'});
+    }
+    if (e.target.closest('#fbCopiar')) return copy(fbText(), 'Comentários copiados.');
+    if (e.target.closest('#fbEnviar')) {
+      const btn = $('#fbEnviar');
+      if (FB_ACCESS_KEY.startsWith('COLE_AQUI')) { $('#fbSend').innerHTML = fbSendHtml('O envio ainda não foi configurado. Use "Copiar comentários" e mande para o Edu.'); return; }
+      btn.disabled = true; btn.textContent = 'Enviando…';
+      try {
+        const r = await fetch('https://api.web3forms.com/submit', {method:'POST', headers:{'Content-Type':'application/json', 'Accept':'application/json'},
+          body: JSON.stringify({access_key: FB_ACCESS_KEY, subject: `Feedback da demo — ${FB.items.length} comentário(s)`, from_name: 'Demo Dra. Larissa', name: FB.nome || 'Dra. Larissa', message: fbText()})});
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok || j.success === false) throw new Error(j.message || 'falha');
+        FB.items = []; FB.draft = ''; fbSave(); fbCount(); fbClose();
+        toast('Comentários enviados. Obrigado!', {bear:true, ms:4000});
+      } catch(err) {
+        $('#fbSend').innerHTML = fbSendHtml('Não consegui enviar agora. Seus comentários continuam salvos aqui; tente de novo ou use "Copiar comentários".');
+      }
+    }
+  });
+  bg.addEventListener('input', e => {
+    if (e.target.id === 'fbTxt') { FB.draft = e.target.value; fbSave(); }
+    if (e.target.id === 'fbNome') { FB.nome = e.target.value; fbSave(); }
+  });
+  document.body.appendChild(bg);
+  $('#fbTxt').focus();
+}
+act.fb = fbOpen;
+fbCount();
 
 render();
 </script>
